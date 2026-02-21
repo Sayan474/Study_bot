@@ -13,6 +13,10 @@ load_dotenv()
 # Initialize FastAPI
 app = FastAPI()
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 # Connect to MongoDB
 client = MongoClient(os.getenv("MONGODB_URI"))
 db = client["studybot"]
