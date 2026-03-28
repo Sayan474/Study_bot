@@ -3,13 +3,21 @@
 An AI-powered Study Assistant chatbot built using FastAPI, LangChain, and MongoDB that answers academic questions and maintains conversation memory for each user.
 
 🚀 Features
+
 📚 Answers study-related academic questions only
+
 🧠 Maintains persistent chat memory using MongoDB
+
 👥 Supports multiple users via user_id
+
 🔄 Provides context-aware responses
+
 🌐 Deployed as a REST API
+
 ⚡ Powered by Groq LLM (LLaMA models)
+
 🏗️ Tech Stack
+
 Backend: FastAPI
 LLM Integration: LangChain
 Database: MongoDB Atlas
