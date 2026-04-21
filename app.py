@@ -252,6 +252,19 @@ def chat_history(user_id: str):
         ],
     }
 
+
+@app.delete("/chat/history/{user_id}")
+def clear_chat_history(user_id: str):
+    user_exists = users_collection.find_one({"user_id": user_id})
+    if not user_exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    result = chat_collection.delete_many({"user_id": user_id})
+    return {
+        "message": "Chat history cleared",
+        "deleted_count": result.deleted_count,
+    }
+
 @app.post("/chat")
 def chat(request: ChatRequest):
     user_exists = users_collection.find_one({"user_id": request.user_id})

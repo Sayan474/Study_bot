@@ -274,11 +274,44 @@ input:focus {
 }
 
 .chat-main {
+  position: relative;
   padding: 24px;
+  padding-top: 72px;
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 14px;
   background: linear-gradient(160deg, var(--bg-panel-2), rgba(10, 19, 35, 0.88));
+}
+
+.clear-chat-btn {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 10;
+  border: 1px solid rgba(255, 169, 169, 0.5);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffd6d6;
+  background: rgba(84, 25, 33, 0.75);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.clear-chat-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(101, 31, 42, 0.92);
+}
+
+.clear-chat-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .chat-history {
@@ -405,6 +438,17 @@ input:focus {
   .chat-side,
   .chat-main {
     padding: 16px;
+  }
+
+  .chat-main {
+    padding-top: 64px;
+  }
+
+  .clear-chat-btn {
+    top: 14px;
+    right: 16px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
   }
 
   .bubble {

@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { askQuestion } from "../api";
+import { askQuestion, clearChatHistory } from "../api";
 
 export default function ChatShell({ user, messages, setMessages, onLogout }) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [error, setError] = useState("");
 
   const greeting = useMemo(() => {
@@ -56,6 +57,35 @@ export default function ChatShell({ user, messages, setMessages, onLogout }) {
     }
   }
 
+  async function handleClearHistory() {
+    if (loading || clearing) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to clear your full chat history? This action cannot be undone."
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setError("");
+    setClearing(true);
+    try {
+      await clearChatHistory(user.user_id);
+      setMessages([]);
+    } catch (requestError) {
+      const message = requestError.message || "Unable to clear chat history right now";
+      if (message.toLowerCase().includes("user not found")) {
+        onLogout();
+        return;
+      }
+      setError(message);
+    } finally {
+      setClearing(false);
+    }
+  }
+
   return (
     <div className="chat-layout">
       <aside className="chat-side">
@@ -68,6 +98,15 @@ export default function ChatShell({ user, messages, setMessages, onLogout }) {
       </aside>
 
       <section className="chat-main">
+        <button
+          type="button"
+          className="clear-chat-btn"
+          onClick={handleClearHistory}
+          disabled={loading || clearing}
+        >
+          {clearing ? "Clearing..." : "Clear Chat History"}
+        </button>
+
         <div className="chat-history">
           {messages.length === 0 && (
             <div className="empty-chat">

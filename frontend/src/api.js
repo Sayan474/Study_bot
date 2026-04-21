@@ -32,6 +32,13 @@ export async function fetchHistory(userId) {
   return parseResponse(response);
 }
 
+export async function clearChatHistory(userId) {
+  const response = await fetch(`${API_BASE_URL}/chat/history/${userId}`, {
+    method: "DELETE",
+  });
+  return parseResponse(response);
+}
+
 export async function askQuestion(payload) {
   const response = await fetch(`${API_BASE_URL}/chat`, {
     method: "POST",
