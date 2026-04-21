@@ -2,6 +2,8 @@ import datetime
 import os
 import hashlib
 import secrets
+import re
+import html
 from uuid import uuid4
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
@@ -72,10 +74,23 @@ prompt = ChatPromptTemplate.from_messages(
             Physics, Chemistry, Biology, Engineering,
             History, Geography, Economics, Exam preparation.
 
-            Use simple plain text formatting.
-            Write mathematical expressions in readable text form (e.g., sqrt(x), x^2, sin(x)).
-            Do not use LaTeX delimiters like \[ \] or \( \).
-            Avoid Markdown symbols like **.
+                        Formatting and readability rules:
+                        - Output plain text only.
+                        - Do not use Markdown syntax (no **, #, tables with |, or fenced code blocks).
+                        - Do not use HTML entities like &nbsp;.
+                        - Use clear line breaks between sections.
+                        - For programming concepts or algorithms, use this exact readable layout:
+                            Overview:
+                            Steps:
+                            Code (language name):
+                            Complexity:
+                            Example:
+                        - Keep explanations concise and human-friendly.
+                        - Never output one long mixed paragraph for coding answers.
+
+                        Math formatting rule:
+                        - Write mathematical expressions in readable text form (e.g., sqrt(x), x^2, sin(x)).
+                        - Do not use LaTeX delimiters like \[ \] or \( \).
 
             If a user asks about topics unrelated to academics
             (such as entertainment, jokes, politics, gossip,
@@ -112,6 +127,49 @@ def build_password_record(password: str) -> tuple[str, str]:
 
 def verify_password(password: str, salt: str, expected_hash: str) -> bool:
     return hash_password(password, salt) == expected_hash
+
+
+def sanitize_assistant_response(text: str) -> str:
+    if not text:
+        return ""
+
+    # Normalize escaped entities and line endings first.
+    cleaned = html.unescape(text).replace("\r\n", "\n").replace("\r", "\n")
+    # Remove fenced code wrappers if present.
+    cleaned = re.sub(r"```[a-zA-Z0-9_+-]*", "", cleaned)
+    cleaned = cleaned.replace("```", "")
+
+    output_lines = []
+    for raw_line in cleaned.split("\n"):
+        line = raw_line.strip()
+        if not line:
+            output_lines.append("")
+            continue
+
+        # Drop markdown horizontal rules.
+        if re.fullmatch(r"[-*_]{3,}", line):
+            continue
+
+        # Convert markdown table rows to readable plain text.
+        if line.startswith("|") and line.endswith("|"):
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            # Skip separator rows such as |---|---|
+            if all(re.fullmatch(r"[:\- ]*", cell) for cell in cells):
+                continue
+            output_lines.append(" - ".join(cell for cell in cells if cell))
+            continue
+
+        # Remove heading markers and markdown emphasis tokens.
+        line = re.sub(r"^#{1,6}\s*", "", line)
+        line = line.replace("**", "").replace("__", "")
+        line = line.replace("`", "")
+
+        output_lines.append(line)
+
+    # Collapse repeated blank lines for cleaner rendering.
+    normalized = "\n".join(output_lines)
+    normalized = re.sub(r"\n{3,}", "\n\n", normalized)
+    return normalized.strip()
 
 def get_history(user_id):
     chats = chat_collection.find({"user_id": user_id}).sort("timestamp", 1)
@@ -208,6 +266,7 @@ def chat(request: ChatRequest):
             "question": request.question,
         }
     )
+    assistant_message = sanitize_assistant_response(response.content)
 
     chat_collection.insert_one({
         "user_id": request.user_id,
@@ -219,8 +278,8 @@ def chat(request: ChatRequest):
     chat_collection.insert_one({
         "user_id": request.user_id,
         "role": "assistant",
-        "message": response.content,
+        "message": assistant_message,
         "timestamp": datetime.now(UTC)
     })
 
-    return {"response" : response.content}
+    return {"response" : assistant_message}

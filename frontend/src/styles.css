@@ -306,6 +306,12 @@ input:focus {
   line-height: 1.45;
 }
 
+.message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .bubble .role {
   font-size: 0.78rem;
   opacity: 0.86;

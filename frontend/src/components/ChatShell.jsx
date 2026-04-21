@@ -13,6 +13,13 @@ export default function ChatShell({ user, messages, setMessages, onLogout }) {
     return "Good evening";
   }, []);
 
+  function normalizeMessage(text) {
+    if (!text) {
+      return "";
+    }
+    return text.replace(/&nbsp;/g, " ");
+  }
+
   async function submitQuestion(event) {
     event.preventDefault();
     if (!question.trim() || loading) {
@@ -75,7 +82,7 @@ export default function ChatShell({ user, messages, setMessages, onLogout }) {
               className={item.role === "user" ? "bubble user" : "bubble assistant"}
             >
               <span className="role">{item.role === "user" ? "You" : "Study Bot"}</span>
-              <p>{item.message}</p>
+              <p className="message-text">{normalizeMessage(item.message)}</p>
             </article>
           ))}
         </div>
